@@ -73,7 +73,7 @@ sudo pacman -Syu
 
 ## Step 6
 
-Disk Partition (Create Partitions)
+#### Disk Partition
 
 ```bash
 cfdisk
@@ -85,6 +85,54 @@ cfdisk
 > **UEFI = GPT**
 
 > **BIOS = DOS**
+
+<hr>
+
+***Check if we have UEFI***
+
+```bash
+ls /sys/firmware/efi/efivars
+```
+
+> Note: If you need to change the partition table since we have UEFI, we simply run
+
+```bash
+lsblk
+```
+*We select our hard drive*
+
+```bash
+fdisk /dev/sda
+```
+We write *"g"* to change the format to GPT
+and then *"w"* to write the changes.
+
+And ready.
+<hr>
+
+#### (Create Partitions)
+
+> Note: If you need to change the partition table since we have UEFI, we simply run
+
+To personal taste I create four different partitions.
+
+``/boot``
+
+``/root``
+
+``/home``
+
+``/swap``
+
+**I leave this part to personal option (you will have to investigate according to your needs)**
+<hr>
+
+> I've attached this screenshot of what my partitions look like at the end.
+
+[![Captura-de-pantalla-2023-10-29-133110.png](https://i.postimg.cc/Jzq6zfyf/Captura-de-pantalla-2023-10-29-133110.png)](https://postimg.cc/CRRHv6s7)
+
+
+
 
 
 

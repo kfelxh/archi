@@ -116,7 +116,7 @@ And ready.
 
 To personal taste I create four different partitions.
 
-``/boot``
+``/boot`` 
 
 ``/root``
 
@@ -131,8 +131,337 @@ To personal taste I create four different partitions.
 
 [![Captura-de-pantalla-2023-10-29-133110.png](https://i.postimg.cc/Jzq6zfyf/Captura-de-pantalla-2023-10-29-133110.png)](https://postimg.cc/CRRHv6s7)
 
+<hr>
+
+We run the following command to check if our partitions were created.
+
+```bash
+fdisk -l 
+```
+It prints the following to us...
+
+[![Captura-de-pantalla-2023-10-29-211742.png](https://i.postimg.cc/vBhHdcB6/Captura-de-pantalla-2023-10-29-211742.png)](https://postimg.cc/KkKyPctZ)
+
+## Step 7
+
+**Format partitions**
+
+## ``/boot``
+
+*Without EUFI (Legacy mode)*
+
+```bash
+mkfs.ext2 /dev/sda1
+```
+*With UEFI Activated*
+
+```bash
+mkfs.vfat -F32 /dev/sda1
+```
+## ``/root``
+
+```bash
+mkfs.ext4 /dev/sda2
+```
+
+## ``/home``
+
+```bash
+mkfs.ext4 /dev/sda3
+```
+
+## ``/swap``
+
+***formatting***
+
+```bash
+mkswap /dev/sda4
+```
+***activating***
+
+```bash
+swapon /dev/sda4
+```
+
+**Mounting partitions**
+
+*Without EUFI (Legacy mode)*
+
+## ``/root``
+
+```bash
+mount /dev/sda2 /mnt
+```
+**creating directories inside /mnt to mount the /boot and /home partitions**
+
+```bash
+mkdir /mnt/home
+```
+
+```bash
+mkdir /mnt/boot
+```
+
+**mounting both partitions in the created directories**
+
+```bash
+mount /dev/sda1 /mnt/boot
+```
+
+```bash
+mount /dev/sda3 /mnt/home
+```
+
+*With UEFI*
+
+```bash
+mount /dev/sda2 /mnt
+```
+
+**creating directories inside /mnt to mount the */boot/efi* and /home partitions**
+
+```bash
+mkdir /mnt/home
+```
+```bash
+mkdir -p /mnt/boot/efi
+```
+
+**mounting both partitions in the created directories**
+
+```bash
+mount /dev/sda1 /mnt/boot/efi
+```
+
+```bash
+mount /dev/sda3 /mnt/home
+```
+And ready. 
+
+<hr>
+
+### Installing the Base System
+
+> Packages to install 
+
+* ``base base-devel`` 
+
+* ``grub``
+
+* ``os-probes``
+
+* ``ntfs-3g``
+
+* ``networkmanager``
+
+> **If you are using UEFI**
+
+* ``efibootmgr``
+
+* ``gvfs``
+
+* ``gvfs-afc``
+
+* ``gvfs-mtp``
+
+* ``xdg-user-dirs``
+
+### For BIOS
+
+```bash
+pacstrap /mnt base base-devel grub os-prober ntfs-3g networkmanager gvfs gvfs-afc gvfs-mtp xdg-user-dirs linux linux-firmware nano dhcpcd
+```
+
+### For UEFI
+
+```bash
+pacstrap /mnt base base-devel efibootmgr os-prober ntfs-3g networkmanager grub gvfs gvfs-afc gvfs-mtp xdg-user-dirs linux linux-firmware nano dhcpcd
+```
+
+### Additional packages
+
+**Wifi**
+
+```bash
+pacstrap /mnt networkmanager netctl wpa_supplicant dialog
+```
+**Touchpad (laptop)** 
+
+```bash
+pacstrap /mnt xf86-input-synaptics
+```
+**Generate fstab**
+
+```bash
+genfstab -pU /mnt >> /mnt/etc/fstab
+```
+
+## Step 8
+
+### Enter the base system
+
+```bash
+arch-chroot /mnt
+```
+
+<hr>
+
+### Configure the base system
+
+> Creating Hostname
+
+```bash
+echo asuka > /etc/hostname
+```
+> Set time zone (Spain)
+
+<!--- ln -sf /usr/share/zoneinfo/America/Guatemala /etc/localtime --->
 
 
+```bash
+ln -sf /usr/share/zoneinfo/Europe/Madrid /etc/localtime
+```
+> Set system language (Spanish)
 
+```bash
+echo LANG=es_GT.UTF-8 > /etc/locale.conf
+```
+Generate Archive
+
+```bash
+locale-gen
+```
+
+> Set Clock
+
+```bash
+hwclock -w
+```
+<hr>
+
+### Install Grub
+
+Without UEFI
+
+```bash
+grub-install /dev/sda
+```
+
+With UEFI
+
+```bash
+grub-install --efi-directory=/boot/efi --bootloader-id='Arch Linux' --target=x86_64-efi
+```
+
+Update Grub
+
+```bash
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+<hr>
+
+### Root Password
+
+```bash
+passwd
+```
+
+### Create User
+
+```bash
+useradd -m -g users -G audio,lp,optical,storage,video,wheel,games,power,scanner -s /bin/bash asuka
+```
+
+```bash
+passwd
+```
+<hr>
+
+### Exit Chroot
+
+```bash
+exit
+```
+## Step 9
+
+### unmount partitions
+
+* /boot or /boot/efi
+* /home
+* /
+
+> with UEFI
+
+```
+umount /mnt/boot/efi
+```
+
+```
+umount /mnt/home
+```
+
+```
+umount /mnt
+```
+> with BIOS
+
+```
+umount /mnt/boot/
+```
+
+```
+umount /mnt/home
+```
+
+```
+umount /mnt
+```
+
+## Step 10
+
+### Reboot System
+
+```
+reboot
+```
+
+[![Captura-de-pantalla-2023-10-29-224121.png](https://i.postimg.cc/ryZzFV52/Captura-de-pantalla-2023-10-29-224121.png)](https://postimg.cc/YjgtdwXd)
+
+**Enable Network Manager**
+
+```
+systemctl start NetworkManager.service
+```
+
+```
+systemctl enable NetworkManager.service
+```
+
+
+**Graphics server**
+
+```
+sudo pacman -S xorg-server xorg-xinit
+```
+
+**Install Mesa**
+
+```
+sudo pacman -S mesa mesa-demos
+```
+
+**Video Drives**
+
+*Intel Drivers*
+```
+sudo pacman -S xf86-video-intel intel-ucode
+```
+<hr>
+
+> Note: Well, I emphasize again that this is my personal guide to installing Arch Linux without scripts. So if it meets your needs, go ahead.
+>But also see the official Arch Linux guide.
+>Bye
+
+##### By Eva 💙 
 
 

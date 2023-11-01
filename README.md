@@ -462,6 +462,6 @@ sudo pacman -S xf86-video-intel intel-ucode
 >But also see the official Arch Linux guide.
 >Bye
 
-##### By Luis 🧊 
+##### By kfelxh 🧊 
 
 
